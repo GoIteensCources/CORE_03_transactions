@@ -1,6 +1,6 @@
 import hashlib
 import datetime as dt
-
+import pprint as pp
 
 categories = ["Food", "Entertainment", "Transport"]
 
@@ -28,7 +28,6 @@ def check_password(password, h_pass) -> bool:
 
 
 user_db = {"user": hash_password("user")}  # {"username": "hash_password"}
-
 
 
 def register_user(username, password):
@@ -59,7 +58,6 @@ def add_transaction(amount:int, category:str, date = None):
     # "check date
     # dt.date.fromtimestamp(date)"
     
-    
     curr_date = dt.date.today().strftime('%Y-%m-%d')
 
     transactions[new_key] = {
@@ -87,12 +85,17 @@ def edit_transaction(transaction_id: int, amount=None, date=None, category=None)
         print(f"Не існує такої транзакції = {transaction_id}")
 
         
-def delete_transaction(transactions_id:int):
-    transactions.pop(transactions_id)
+def delete_transactions(transactions_id:int):
+    try:
+        transactions.pop(transactions_id)
+    except KeyError as ke:
+        print(f"no such element exists: {ke}")
+    else:
+        print("item deleted successfully")
 
 
 def show_transactions():
-    ...
+    pp.pprint(transactions)
 
 
 # ------ show info --------------------
@@ -111,16 +114,25 @@ def calculate_total(category=None):
         res2 = total[category]
         print(f"Витрати на транспорт: {res2}")
  
+
+def calculate_total(category=None) -> int:
+    total: int = 0
+    for trans in transactions.values():
+        if category is None or trans['category'] == category:
+            total += trans['amount']
+    return total
  
+
 if __name__ == "__main__":
     
     register_user("admin", password="admin")
     print(user_db)
     
-    username = input("Enter username: ")
-    password = input("Enter Password: ")
+    # username = input("Enter username: ")
+    # password = input("Enter Password: ")
+    username = "admin"
     
-    if not authenticate_user(username, password):
+    if not authenticate_user(username, password="admin"):
         exit(0)
     
     while True:
@@ -136,7 +148,7 @@ if __name__ == "__main__":
                 
         if choise == "1":
             amount = int(input("Введіть суму: "))
-            category = input(f"Введіть категорію {category}: ")
+            category = input(f"Введіть категорію {categories}: ")
             add_transaction(amount, category)
             
         elif choise == "2":
@@ -151,7 +163,7 @@ if __name__ == "__main__":
             
         elif choise == "3":
             transaction_id = int(input("Введіть ID транзакції: "))
-            delete_transaction(transaction_id)
+            delete_transactions(transaction_id)
             
         elif choise == "4":
             show_transactions()
