@@ -75,7 +75,7 @@ if __name__ == "__main__":
                 
                 report = generate_monthly_report(transactions, wallet, year=year, month=month)
     
-                create_report_file(report, f"{year}-{month:02d}")
+                # create_report_file(report, f"{year}-{month:02d}")
                 
             
         elif choise == "0":
