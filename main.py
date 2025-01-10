@@ -1,138 +1,20 @@
-import hashlib
-import datetime as dt
-import pprint as pp
+from auth.auth import register_user, authenticate_user
+from components.reports import generate_monthly_report
+from database import transactions, user_db, categories, wallet
+from components.transactions import *
+from components.budget import set_mounth_budget
 
-categories = ["Food", "Entertainment", "Transport"]
-
-transactions = {
-    1: {'amount': 400, 'category': 'Transport', 'date': '2023-11-06'},
-    2: {'amount': 119, 'category': 'Food', 'date': '2023-12-08'},
-    3: {'amount': 236, 'category': 'Entertainment', 'date': '2023-11-17'},
-    4: {'amount': 230, 'category': 'Food', 'date': '2023-12-04'},
-    5: {'amount': 275, 'category': 'Entertainment', 'date': '2023-12-21'},
-    6: {'amount': 431, 'category': 'Transport', 'date': '2023-12-03'},
-    7: {'amount': 464, 'category': 'Food', 'date': '2023-12-06'},
-    8: {'amount': 224, 'category': 'Entertainment', 'date': '2023-11-27'},
-    9: {'amount': 93, 'category': 'Food', 'date': '2023-12-30'},
-    10: {'amount': 405, 'category': 'Food', 'date': '2023-12-05'},
-    
-}
-
-
-
-def hash_password(data: str):
-    return hashlib.sha256(data.encode()).hexdigest()
-
-def check_password(password, h_pass) -> bool:
-    return hash_password(password) == h_pass
-
-
-user_db = {"user": hash_password("user")}  # {"username": "hash_password"}
-
-
-def register_user(username, password):
-    if username in user_db:
-        print("Цей логін уже використовується. Оберіть інший.")
-    else:
-        user_db[username] = hash_password(password)
-        print(f"Користувача {username} успішно зареєстровано.")
-
-
-def authenticate_user(username, password) -> bool:
-    if username not in user_db:
-        print("Не зареестрований користувач")
-        return False
-    if check_password(password, h_pass=user_db[username]):
-        print(f"Welcome! {username}")
-        return True
-    else:
-        print("Incorrect Password")
-        return False
-        
-   
-   
-def add_transaction(amount:int, category:str, date = None):
-    max_key = max(transactions.keys())
-    new_key = max_key + 1
-    
-    # "check date
-    # dt.date.fromtimestamp(date)"
-    
-    curr_date = dt.date.today().strftime('%Y-%m-%d')
-
-    transactions[new_key] = {
-        'amount': amount,
-        'category': category,
-        'date': date if date else curr_date
-    }
-
-    print(transactions)
-    
-
-def edit_transaction(transaction_id: int, amount=None, date=None, category=None):
-    if transaction_id in transactions:
-        if amount is not None:
-            transactions[transaction_id]["amount"] = amount
-
-        if date is not None:
-            transactions[transaction_id]["date"] = date
-
-        if category is not None:
-            transactions[transaction_id]["category"] = category
-        
-        print("Змінено {transaction_id}")        
-    else:
-        print(f"Не існує такої транзакції = {transaction_id}")
-
-        
-def delete_transactions(transactions_id:int):
-    try:
-        transactions.pop(transactions_id)
-    except KeyError as ke:
-        print(f"no such element exists: {ke}")
-    else:
-        print("item deleted successfully")
-
-
-def show_transactions():
-    pp.pprint(transactions)
-
-
-# ------ show info --------------------
-
-def calculate_total(category=None):
-    res = None
-    res1 = None
-    res2 = None
-    if category in transactions == "Food":
-        res = total[category]
-        print(f"Витрати на їжу: {res}")
-    elif category in transactions == "Entertainment":
-        res1 = total[category]
-        print(f"Витрати на розваги: {res1}")
-    elif category in transactions == "Transport":
-        res2 = total[category]
-        print(f"Витрати на транспорт: {res2}")
- 
-
-def calculate_total(category=None) -> int:
-    total: int = 0
-    for trans in transactions.values():
-        if category is None or trans['category'] == category:
-            total += trans['amount']
-    return total
- 
 
 if __name__ == "__main__":
     
-    register_user("admin", password="admin")
+    register_user(transactions, user_db, "admin", password="admin")
     print(user_db)
     
     # username = input("Enter username: ")
     # password = input("Enter Password: ")
     username = "admin"
     
-    if not authenticate_user(username, password="admin"):
+    if not authenticate_user(transactions, user_db, username, password="admin"):
         exit(0)
     
     while True:
@@ -142,6 +24,9 @@ if __name__ == "__main__":
         print("3. Видалити транзакцію")
         print("4. Показати всі транзакції")
         print("5. Підрахувати витрати")
+        
+        print("6. Додати бюджет")
+        print("7. Створити звіт")
         print("0. Вийти")    
         
         choise = input("Оберіть дію: ")
@@ -149,32 +34,49 @@ if __name__ == "__main__":
         if choise == "1":
             amount = int(input("Введіть суму: "))
             category = input(f"Введіть категорію {categories}: ")
-            add_transaction(amount, category)
+            add_transaction(transactions, amount, category)
             
         elif choise == "2":
             transaction_id = int(input("Введіть ID транзакції: "))
             amount = input("Нова сума (залиште порожнім, щоб не змінювати): ")
             category = input("Нова категорія (залиште порожнім, щоб не змінювати): ")
             date = input("Нова дата (залиште порожнім, щоб не змінювати): ")
-            edit_transaction(transaction_id,
-                             amount=int(amount) if amount else None,
-                             date=date if date else None,
-                             category=category if category else None)
+            edit_transaction(
+                transaction_id, 
+                amount=int(amount) if amount else None, 
+                date=date if date else None,
+                category=category if category else None
+                )
             
         elif choise == "3":
             transaction_id = int(input("Введіть ID транзакції: "))
-            delete_transactions(transaction_id)
+            delete_transactions(transactions, transaction_id)
             
         elif choise == "4":
-            show_transactions()
+            show_transactions(transactions)
             
         elif choise == "5":
             category = input("Введіть категорію для підрахунку (або залиште порожнім для всіх): ")
-            total = calculate_total(category if category else None)
+            total = calculate_total(transactions, category if category else None)
             if category:
                 print(f"Витрати по {category}: {total}")
             else:
                 print(f"Загальні витрати: {total}")
+        
+        elif choise == "6":
+            month = int(input("Month: "))
+            amount = int(input("Amount: "))
+            set_mounth_budget(month=month, amount=amount, wallet=wallet)            
+        
+        elif choise == "7":
+                month = int(input("Введіть місяць: "))
+                year = input("Введіть рік, або залиште порожнім шоб створити для поточного року: ")
+                year = int(year) if year else dt.date.today().year
+                
+                report = generate_monthly_report(transactions, wallet, year=year, month=month)
+    
+                create_report_file(report, f"{year}-{month:02d}")
+                
             
         elif choise == "0":
             print(f"До побачення, {username}!!")
