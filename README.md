@@ -48,3 +48,20 @@
 ```bash
 git clone https://github.com/GoIteensCources/CORE_03_transactions.git
 ```
+
+
+## встановити pytest
+```bash
+pip install pytest pytest-cov
+```
+
+## запуск тестів
+
+```bash
+pytest --cov=.
+```
+або
+
+```bash
+pytes .
+```
