@@ -4,3 +4,4 @@
 template.py
 *.log
 __pycache__
+.coverage

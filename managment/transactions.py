@@ -2,7 +2,7 @@ import datetime as dt
 
 
 # Egor
-def create_transaction( transactions:dict, amount: int, category: str, date: str=None)->dict:
+def create_transaction(transactions:dict, amount: int, category: str, date: str=None)->dict:
     try:
         next_id = max(transactions.keys()) + 1
     except ValueError: 
